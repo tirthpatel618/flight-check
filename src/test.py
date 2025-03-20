@@ -1,3 +1,3 @@
 import dotenv
-
-print("hi")
+import requests
+print("done imports")
