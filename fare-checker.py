@@ -6,17 +6,26 @@ from email.message import EmailMessage
 from datetime import date, timedelta
 import requests
 import dotenv
-
 from amadeus import Client, ResponseError
 
 dotenv.load_dotenv()
 
+class Config:
+    AMADEUS_CLIENT_ID = os.getenv("API_KEY")
+    AMADEUS_CLIENT_SECRET = os.getenv("API_SECRET")
 
-amadeus = Client(
-    client_id=os.getenv("API_KEY"),
-    client_secret=os.getenv("API_SECRET"),
-    hostname='production'
-)
+    ORIGIN = 'YYZ'
+    DESTINATIONS = ["LHR", "CDG", "AMS", "FRA", "BCN", "MAD", "FCO", "VIE", "ZRH", "ARN", "OSL", "BUD"]
+    PRICE_THRESHOLD = 400
+
+class FlightMoniter:
+    def __init__(self):
+        self.amadeus = Client(
+            client_id=Config.AMADEUS_CLIENT_ID,
+            client_secret=Config.AMADEUS_CLIENT_SECRET,
+            hostname='production'
+        )
+
 
 def search_flights(max_price):
     departure_date = date.today() + timedelta(days=1)
