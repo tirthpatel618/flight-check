@@ -4,9 +4,14 @@ import json
 import smtplib
 from email.message import EmailMessage
 from datetime import date, timedelta
+import datetime
 import requests
 import dotenv
 from amadeus import Client, ResponseError
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import smtplib
+
 
 dotenv.load_dotenv()
 
@@ -92,6 +97,97 @@ class FlightMoniter:
         }
         
         return flight_info
+    
+    def format_flight_for_email(self, flight):
+        """Format flight information for email"""
+        html = f"""
+        <div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <h3 style="color: #2c3e50;">✈️ {Config.ORIGIN} → {flight['destination']} → {Config.ORIGIN}</h3>
+            <p style="font-size: 24px; color: #27ae60; font-weight: bold;">
+                ${flight['price']:.2f} {flight['currency']}
+            </p>
+            
+            <h4>Outbound: {flight['departure_date']}</h4>
+            <ul>
+        """
+        
+        for seg in flight['outbound_segments']:
+            dep_time = datetime.fromisoformat(seg['departure'].replace('T', ' ')).strftime('%H:%M')
+            arr_time = datetime.fromisoformat(seg['arrival'].replace('T', ' ')).strftime('%H:%M')
+            html += f"""
+                <li>{seg['from']} → {seg['to']} | {seg['carrier']}{seg['flight_number']} | {dep_time} - {arr_time}</li>
+            """
+        
+        html += f"""
+            </ul>
+            
+            <h4>Return: {flight['return_date']}</h4>
+            <ul>
+        """
+        
+        for seg in flight['inbound_segments']:
+            dep_time = datetime.fromisoformat(seg['departure'].replace('T', ' ')).strftime('%H:%M')
+            arr_time = datetime.fromisoformat(seg['arrival'].replace('T', ' ')).strftime('%H:%M')
+            html += f"""
+                <li>{seg['from']} → {seg['to']} | {seg['carrier']}{seg['flight_number']} | {dep_time} - {arr_time}</li>
+            """
+        
+        html += f"""
+            </ul>
+            <p><strong>Class:</strong> {flight['booking_class']}</p>
+        </div>
+        """
+        
+        return html
+    def send_email(self):
+        """Send email with found deals"""
+        if not self.deals_found:
+            print("No deals found below threshold")
+            return
+        
+        # Create email
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"✈️ Flight Deals Alert: {len(self.deals_found)} flights under ${Config.PRICE_THRESHOLD}"
+        msg['From'] = Config.SENDER_EMAIL
+        msg['To'] = Config.RECIPIENT_EMAIL
+        
+        # Create HTML content
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <h2 style="color: #2c3e50;">🎉 Flight Deals Found!</h2>
+            <p>Found {len(self.deals_found)} flights from Toronto under ${Config.PRICE_THRESHOLD} CAD</p>
+            <hr>
+        """
+        
+        # Add each flight
+        for flight in self.deals_found:
+            html_content += self.format_flight_for_email(flight)
+        
+        html_content += """
+            <hr>
+            <p style="color: #7f8c8d; font-size: 12px;">
+                This is an automated alert from your flight price monitor.<br>
+                Prices may change quickly - book soon if interested!
+            </p>
+        </body>
+        </html>
+        """
+        
+        # Attach HTML content
+        msg.attach(MIMEText(html_content, 'html'))
+        
+        # Send email
+        try:
+            with smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT) as server:
+                server.starttls()
+                server.login(Config.SENDER_EMAIL, Config.SENDER_PASSWORD)
+                server.send_message(msg)
+                print(f"Email sent successfully with {len(self.deals_found)} deals!")
+        except Exception as e:
+            print(f"Failed to send email: {e}")
+    
+
     
 
 
