@@ -20,7 +20,7 @@ class Config:
     #change according to where you want to go?
     DESTINATIONS = ["PRG", "AMS", "FRA", "BCN", "MAD", "FCO", "VIE", "ZRH", "ARN", "OSL", "BUD"]
     WEEKS=4
-    PRICE_THRESHOLD = 400
+    PRICE_THRESHOLD = int(os.getenv("PRICE_THRESHOLD", 400))  # Default to 400 if not set
 
     SMTP_SERVER = 'smtp.gmail.com'
     SMTP_PORT = 587
