@@ -3,15 +3,13 @@ import sys
 import json
 import smtplib
 from email.message import EmailMessage
-from datetime import date, timedelta
-import datetime
+from datetime import date, timedelta, datetime
 import requests
 import dotenv
 from amadeus import Client, ResponseError
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import smtplib
-
+import time
 
 dotenv.load_dotenv()
 
@@ -21,7 +19,15 @@ class Config:
 
     ORIGIN = 'YYZ'
     DESTINATIONS = ["PRG", "AMS", "FRA", "BCN", "MAD", "FCO", "VIE", "ZRH", "ARN", "OSL", "BUD"]
-    PRICE_THRESHOLD = 4000
+    WEEKS=4
+    PRICE_THRESHOLD = 2000
+
+    SMTP_SERVER = 'smtp.gmail.com'
+    SMTP_PORT = 587
+    SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+    SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
+    RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
+
 
 class FlightMoniter:
     def __init__(self):
@@ -41,7 +47,7 @@ class FlightMoniter:
             days_until_friday = 7
 
         next_friday = today + timedelta(days=days_until_friday)
-        for week in range(4):
+        for week in range(Config.WEEKS):
             friday = next_friday + timedelta(weeks=week)
             monday = friday + timedelta(days=3)
             weekends.append((friday, monday))
@@ -62,7 +68,7 @@ class FlightMoniter:
             for offer in response.data:
                 if 'price' in offer and 'total' in offer['price']:
                     price = float(offer['price']['total'])
-                    if price <= Config.max_price:
+                    if price <= Config.PRICE_THRESHOLD:
                         flight_info = self.parse_flight_offer(offer, destination, departure_date, return_date)
                         flights.append(flight_info)
 
@@ -71,7 +77,7 @@ class FlightMoniter:
             return None        
         return flights
                 
-    def parse_flight_offer(offer, destination, departure_date, return_date):
+    def parse_flight_offer(self, offer, destination, departure_date, return_date):
         outbound = offer['itineraries'][0]
         inbound = offer['itineraries'][1] if len(offer['itineraries']) > 1 else None
         
@@ -186,10 +192,28 @@ class FlightMoniter:
                 print(f"Email sent successfully with {len(self.deals_found)} deals!")
         except Exception as e:
             print(f"Failed to send email: {e}")
-    
+    def run(self):
+
+        weekends = self.get_dates()
+        for destination in Config.DESTINATIONS:
+            for depart, ret in weekends:
+                depart_str = depart.strftime('%Y-%m-%d')
+                return_str = ret.strftime('%Y-%m-%d')
+                print(f"Searching flights to {destination} departing {depart_str} and returning {return_str}")
+                flights = self.search_flights(destination, depart_str, return_str)
+                time.sleep(1)
+                if flights:
+                    self.deals_found.extend(flights)
+        if self.deals_found:
+            self.send_email()
+        print(f"Total deals found: {len(self.deals_found)}")
+
+if __name__ == "__main__":
+    flight_monitor = FlightMoniter()
+    flight_monitor.run()
+
 
     
 
 
-print(search_flights(4000))
 
