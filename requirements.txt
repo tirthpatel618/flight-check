@@ -1,4 +1,2 @@
-email
-dotenv
+python-dotenv
 amadeus
-smtplib
