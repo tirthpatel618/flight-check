@@ -43,8 +43,8 @@ jobs:
     
     - name: Run flight price monitor
       env:
-        API_KEY: ${{ secrets.API_KEY }}
-        API_SECRET: ${{ secrets.API_SECRET }}
+        API_KEY: ${{ secrets.AMADEUS_API_KEY }}
+        API_SECRET: ${{ secrets.AMADEUS_API_SECRET }}
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
         RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}

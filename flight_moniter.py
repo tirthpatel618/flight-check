@@ -13,8 +13,8 @@ import time
 dotenv.load_dotenv()
 
 class Config:
-    AMADEUS_CLIENT_ID = os.getenv("API_KEY")
-    AMADEUS_CLIENT_SECRET = os.getenv("API_SECRET")
+    AMADEUS_CLIENT_ID = os.getenv("AMADEUS_API_KEY")
+    AMADEUS_CLIENT_SECRET = os.getenv("AMADEUS_API_SECRET")
 
     ORIGIN = 'YYZ'
     #change according to where you want to go?
