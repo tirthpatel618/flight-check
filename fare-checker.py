@@ -4,7 +4,6 @@ import json
 import smtplib
 from email.message import EmailMessage
 from datetime import date, timedelta, datetime
-import requests
 import dotenv
 from amadeus import Client, ResponseError
 from email.mime.text import MIMEText
@@ -18,9 +17,10 @@ class Config:
     AMADEUS_CLIENT_SECRET = os.getenv("API_SECRET")
 
     ORIGIN = 'YYZ'
+    #change according to where you want to go?
     DESTINATIONS = ["PRG", "AMS", "FRA", "BCN", "MAD", "FCO", "VIE", "ZRH", "ARN", "OSL", "BUD"]
     WEEKS=4
-    PRICE_THRESHOLD = 2000
+    PRICE_THRESHOLD = 400
 
     SMTP_SERVER = 'smtp.gmail.com'
     SMTP_PORT = 587
