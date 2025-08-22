@@ -42,7 +42,7 @@ jobs:
         RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
         PRICE_THRESHOLD: ${{ secrets.PRICE_THRESHOLD }}
       run: |
-        python flight_monitor.py
+        python flight-monitor.py
     
     - name: Log completion
       run: |
